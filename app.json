@@ -25,7 +25,8 @@
       "package": "com.esap.cafe"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "scheme": "esap-cafe",
     "plugins": ["expo-router"],
