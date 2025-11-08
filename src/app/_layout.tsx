@@ -50,17 +50,15 @@ export default function RootLayout() {
   }, [fontsLoaded]);
 
   useEffect(() => {
-    // Fallback timeout for web: if fonts don't load within 3 seconds, show app anyway
+    // Fallback timeout for web: if fonts don't load within 2 seconds, show app anyway
     if (Platform.OS === 'web') {
       const timeout = setTimeout(() => {
-        if (!appIsReady) {
-          console.warn('Fonts taking too long to load, proceeding anyway');
-          setAppIsReady(true);
-        }
-      }, 3000);
+        console.log('Web timeout triggered, setting app ready');
+        setAppIsReady(true);
+      }, 2000);
       return () => clearTimeout(timeout);
     }
-  }, [appIsReady]);
+  }, []);
 
   useEffect(() => {
     if (appIsReady) {

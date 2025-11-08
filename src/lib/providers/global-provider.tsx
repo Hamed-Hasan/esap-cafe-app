@@ -1,4 +1,5 @@
-import { createContext, ReactNode, useContext, useEffect } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { useCurrentUser } from "../hooks/use-auth-queries";
 import { useAuth } from "../store/auth-store";
 import { User } from "../schemas/auth-schemas";
@@ -14,7 +15,8 @@ const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated, isLoading, setLoading } = useAuth();
-  
+  const [mounted, setMounted] = useState(false);
+
   // Use the current user query to sync with backend
   const {
     data: currentUserData,
@@ -23,12 +25,19 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     error
   } = useCurrentUser();
 
-  // Determine overall loading state
-  const loading = isLoading || (isAuthenticated && isCurrentUserLoading);
+  // Mark as mounted after initial render
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine overall loading state - but don't block on web
+  const loading = Platform.OS === 'web'
+    ? false // Don't block rendering on web
+    : (isLoading || (isAuthenticated && isCurrentUserLoading));
 
   // Handle authentication state synchronization
   useEffect(() => {
-    // If we have a token but no user data, and we're not loading, 
+    // If we have a token but no user data, and we're not loading,
     // it means the token might be invalid
     if (isAuthenticated && !user && !loading && error) {
       console.log('Token appears to be invalid, user will be logged out');
@@ -49,6 +58,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     refetch,
   };
 
+  // Always render children immediately on web
   return (
     <GlobalContext.Provider value={contextValue}>
       {children}

@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { User } from '../schemas/auth-schemas';
@@ -6,6 +5,7 @@ import { EmployeeResponse } from '../schemas/employee-schemas';
 import { AuthService, setAuthToken, setLogoutCallback } from '../services/auth-service';
 import { setLocationAuthToken, setLocationLogoutCallback } from '../services/location-service';
 import { setRoleAuthToken, setRoleLogoutCallback } from '../services/role-service';
+import webStorage from '../utils/storage';
 
 interface AuthState {
   // State
@@ -141,7 +141,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => webStorage),
       partialize: (state: AuthState) => ({
         user: state.user,
         employee: state.employee,
