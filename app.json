@@ -1,29 +1,36 @@
 {
   "expo": {
-    "name": "esap-cafe",
+    "name": "ESAP Cafe",
     "slug": "esap-cafe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "main": "expo-router/entry",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#6B4423"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.esap.cafe"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#6B4423"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.esap.cafe"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "scheme": "esap-cafe",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
