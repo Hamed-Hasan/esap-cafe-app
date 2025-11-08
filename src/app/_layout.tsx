@@ -2,11 +2,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Slot, SplashScreen } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GlobalProvider } from "../lib/providers/global-provider";
 import "./global.css";
+
+// Prevent the splash screen from auto-hiding before asset loading is complete
+SplashScreen.preventAutoHideAsync();
 
 // Create a client
 const queryClient = new QueryClient({
@@ -19,32 +22,70 @@ const queryClient = new QueryClient({
   },
 });
 
-
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [appIsReady, setAppIsReady] = useState(false);
 
-    const [fontsLoaded, error] = useFonts({
+  const [fontsLoaded, error] = useFonts({
     "OpenSauceTwo-bold": require("../assets/fonts/open-sauce-two-bold.ttf"),
     "OpenSauceTwo-medium": require("../assets/fonts/open-sauce-two-medium.ttf"),
     "OpenSauceTwo-semibold": require("../assets/fonts/open-sauce-two-semibold.ttf"),
   });
 
   useEffect(() => {
-    if (error) throw error;
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded, error]);
+    if (error) {
+      console.error('Error loading fonts:', error);
+      // On web, continue even if fonts fail to load
+      if (Platform.OS === 'web') {
+        setAppIsReady(true);
+      }
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      setAppIsReady(true);
+    }
+  }, [fontsLoaded]);
+
+  useEffect(() => {
+    // Fallback timeout for web: if fonts don't load within 3 seconds, show app anyway
+    if (Platform.OS === 'web') {
+      const timeout = setTimeout(() => {
+        if (!appIsReady) {
+          console.warn('Fonts taking too long to load, proceeding anyway');
+          setAppIsReady(true);
+        }
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [appIsReady]);
+
+  useEffect(() => {
+    if (appIsReady) {
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore errors on web where splash screen might not exist
+        console.log('Splash screen already hidden or not available');
+      });
+    }
+  }, [appIsReady]);
+
+  // Don't render anything until app is ready
+  if (!appIsReady) {
+    return null;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalProvider>
-        {/* <SafeAreaView className="flex-1 bg-bg-light dark:bg-bg-dark font-open-sauce-two-medium" edges={["top"]}> */}
-          <StatusBar style={isDark ? "light" : "dark"} backgroundColor="transparent" translucent />
-          <GestureHandlerRootView className="flex-1">
-            <Slot />
-          </GestureHandlerRootView>
-        {/* </SafeAreaView> */}
+        <StatusBar style={isDark ? "light" : "dark"} backgroundColor="transparent" translucent />
+        <GestureHandlerRootView
+          className="flex-1"
+          style={{ flex: 1 }}
+        >
+          <Slot />
+        </GestureHandlerRootView>
       </GlobalProvider>
     </QueryClientProvider>
   );
