@@ -27,6 +27,8 @@ export default function RootLayout() {
   const isDark = colorScheme === "dark";
   const [appIsReady, setAppIsReady] = useState(false);
 
+  console.log('🎨 Root Layout rendering - Platform:', Platform.OS);
+
   const [fontsLoaded, error] = useFonts({
     "OpenSauceTwo-bold": require("../assets/fonts/open-sauce-two-bold.ttf"),
     "OpenSauceTwo-medium": require("../assets/fonts/open-sauce-two-medium.ttf"),
@@ -34,10 +36,15 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    console.log('📊 Font loading state:', { fontsLoaded, error: !!error, appIsReady });
+  }, [fontsLoaded, error, appIsReady]);
+
+  useEffect(() => {
     if (error) {
-      console.error('Error loading fonts:', error);
+      console.error('❌ Error loading fonts:', error);
       // On web, continue even if fonts fail to load
       if (Platform.OS === 'web') {
+        console.log('🌐 Web platform - continuing despite font error');
         setAppIsReady(true);
       }
     }
@@ -45,6 +52,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
+      console.log('✅ Fonts loaded successfully');
       setAppIsReady(true);
     }
   }, [fontsLoaded]);
@@ -52,27 +60,35 @@ export default function RootLayout() {
   useEffect(() => {
     // Fallback timeout for web: if fonts don't load within 2 seconds, show app anyway
     if (Platform.OS === 'web') {
+      console.log('⏱️  Setting 2s timeout for web...');
       const timeout = setTimeout(() => {
-        console.log('Web timeout triggered, setting app ready');
+        console.log('⏰ Web timeout triggered after 2s, forcing app ready');
         setAppIsReady(true);
       }, 2000);
-      return () => clearTimeout(timeout);
+      return () => {
+        console.log('🧹 Clearing timeout');
+        clearTimeout(timeout);
+      };
     }
   }, []);
 
   useEffect(() => {
     if (appIsReady) {
-      SplashScreen.hideAsync().catch(() => {
+      console.log('🚀 App is ready! Hiding splash screen...');
+      SplashScreen.hideAsync().catch((err) => {
         // Ignore errors on web where splash screen might not exist
-        console.log('Splash screen already hidden or not available');
+        console.log('⚠️  Splash screen error (expected on web):', err?.message || 'unknown');
       });
     }
   }, [appIsReady]);
 
   // Don't render anything until app is ready
   if (!appIsReady) {
+    console.log('⏳ App not ready yet, returning null');
     return null;
   }
+
+  console.log('✨ Rendering app content!');
 
   return (
     <QueryClientProvider client={queryClient}>

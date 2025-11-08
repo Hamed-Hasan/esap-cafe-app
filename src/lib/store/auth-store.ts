@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { User } from '../schemas/auth-schemas';
@@ -41,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
       employee: null,
       token: null,
       isAuthenticated: false,
-      isLoading: true, // Start with loading true to prevent premature redirects
+      isLoading: Platform.OS === 'web' ? false : true, // On web, don't block rendering
       error: null,
       employeeLoading: false,
       employeeError: null,
@@ -149,12 +150,13 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
+        console.log('🔄 Rehydrating auth state...');
         if (state) {
           // Validate auth state consistency after hydration
           const hasUser = !!state.user;
           const hasToken = !!state.token;
           const shouldBeAuthenticated = hasUser && hasToken;
-          
+
           if (state.isAuthenticated !== shouldBeAuthenticated) {
             // Fix inconsistent state
             state.isAuthenticated = shouldBeAuthenticated;
@@ -164,16 +166,19 @@ export const useAuthStore = create<AuthState>()(
               setAuthToken(null);
             }
           }
-          
+
           // Ensure token is set in auth service if we have a valid token
           if (state.token && state.isAuthenticated) {
             setAuthToken(state.token);
             setLocationAuthToken(state.token);
             setRoleAuthToken(state.token);
           }
-          
+
           // Set loading to false after hydration and validation
           state.isLoading = false;
+          console.log('✅ Auth state rehydrated:', { isAuthenticated: state.isAuthenticated, hasUser: !!state.user });
+        } else {
+          console.log('⚠️ No state to rehydrate');
         }
       },
     }
